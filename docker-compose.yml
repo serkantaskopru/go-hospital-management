@@ -1,0 +1,56 @@
+version: '3.8'
+name: hospital-management
+services:
+  database:
+    container_name: go-db
+    image: postgres:16.0-alpine3.18
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - data:/var/lib/postgresql/data
+    networks:
+      - hospital-network
+
+  server:
+    container_name: go-server
+    volumes:
+      - .:/app
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - database
+    ports:
+      - "8080:8080"
+    networks:
+      - hospital-network
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5555:5555"
+    networks:
+      - hospital-network  
+
+  redis:
+    container_name: go-redis
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - hospital-network
+
+volumes:
+  data:
+
+networks:
+  hospital-network:
+    driver: bridge
